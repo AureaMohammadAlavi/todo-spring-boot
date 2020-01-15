@@ -5,6 +5,8 @@ import com.manning.gia.todo.repository.ToDoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -28,7 +30,7 @@ public class ToDoController {
         return "redirect:/all";
     }
 
-    @RequestMapping(value = "/all", method = RequestMethod.GET)
+    @GetMapping(value = "/all")
     public String allItems(Model model) {
         List<ToDoItem> toDoItems = toDoRepository.findAll();
         model.addAttribute("toDoItems", toDoItems);
@@ -37,7 +39,7 @@ public class ToDoController {
         return INDEX_PAGE;
     }
 
-    @RequestMapping(value = "/active", method = RequestMethod.GET)
+    @GetMapping(value = "/active")
     public String activeItems(Model model) {
         List<ToDoItem> toDoItems = toDoRepository.findAll();
         model.addAttribute("toDoItems", filterBasedOnStatus(toDoItems, true));
@@ -46,7 +48,7 @@ public class ToDoController {
         return INDEX_PAGE;
     }
 
-    @RequestMapping(value = "/completed", method = RequestMethod.GET)
+    @GetMapping(value = "/completed")
     public String completedItems(Model model) {
         List<ToDoItem> toDoItems = toDoRepository.findAll();
         model.addAttribute("toDoItems", filterBasedOnStatus(toDoItems, false));
@@ -55,15 +57,19 @@ public class ToDoController {
         return INDEX_PAGE;
     }
 
-    @RequestMapping(value = "/insert", method = RequestMethod.POST)
+    @PostMapping(value = "/insert")
     public String insertItem(@RequestParam String name, @RequestParam String filter) {
         ToDoItem toDoItem = new ToDoItem();
         toDoItem.setName(name);
         toDoRepository.save(toDoItem);
+        return redirect(filter);
+    }
+
+    private String redirect(String filter) {
         return "redirect:" + filter;
     }
 
-    @RequestMapping(value = "/update", method = RequestMethod.POST)
+    @PostMapping(value = "/update")
     public String updateItem(@RequestParam Long id, @RequestParam String name, @RequestParam String filter) {
         ToDoItem toDoItem = toDoRepository.findOne(id);
 
@@ -72,10 +78,10 @@ public class ToDoController {
             toDoRepository.save(toDoItem);
         }
 
-        return "redirect:" + filter;
+        return redirect(filter);
     }
 
-    @RequestMapping(value = "/delete", method = RequestMethod.POST)
+    @PostMapping(value = "/delete")
     public String deleteItem(@RequestParam Long id, @RequestParam String filter) {
         ToDoItem toDoItem = toDoRepository.findOne(id);
 
@@ -83,23 +89,23 @@ public class ToDoController {
             toDoRepository.delete(toDoItem);
         }
 
-        return "redirect:" + filter;
+        return redirect(filter);
     }
 
-    @RequestMapping(value = "/toggleStatus", method = RequestMethod.POST)
+    @PostMapping(value = "/toggleStatus")
     public String toggleStatus(@RequestParam Long id, @RequestParam(required = false) Boolean toggle, @RequestParam String filter) {
         ToDoItem toDoItem = toDoRepository.findOne(id);
 
         if(toDoItem != null) {
-            boolean completed = (toggle == null || toggle == Boolean.FALSE) ? false : true;
+            boolean completed = toggle != null && toggle;
             toDoItem.setCompleted(completed);
             toDoRepository.save(toDoItem);
         }
 
-        return "redirect:" + filter;
+        return redirect(filter);
     }
 
-    @RequestMapping(value = "/clearCompleted", method = RequestMethod.POST)
+    @PostMapping(value = "/clearCompleted")
     public String clearCompleted(@RequestParam String filter) {
         List<ToDoItem> toDoItems = toDoRepository.findAll();
 
@@ -109,7 +115,7 @@ public class ToDoController {
             }
         }
 
-        return "redirect:" + filter;
+        return redirect(filter);
     }
 
     private List<ToDoItem> filterBasedOnStatus(List<ToDoItem> toDoItems, boolean active) {
