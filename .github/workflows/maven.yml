@@ -21,8 +21,10 @@ jobs:
     - name: Cache maven modules
       uses: actions/cache@v2
       with:
-        path: ~/.m2
-        key: ${{ runner.os }}--${{ hashFiles('**/pom.xml') }}
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+        key: ${{ runner.os }}--${{ hashFiles('**/build.gradle') }}
 
     - name: Build with Maven
-      run: mvn -B verify --file pom.xml
+      run: ./gradlew build
